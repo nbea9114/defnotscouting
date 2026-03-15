@@ -96,7 +96,7 @@ class SnakeGameViewModel : ViewModel() {
     private val _gameState = MutableStateFlow(SnakeGameState())
     val gameState = _gameState.asStateFlow()
 
-    private var lastMoveTime = 0L
+    private var lastMoveTime = 1L
 
     companion object {
         const val BOARD_SIZE = 15 // Increased board size for more food
