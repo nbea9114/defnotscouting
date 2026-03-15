@@ -101,7 +101,7 @@ class SnakeGameViewModel : ViewModel() {
     companion object {
         const val BOARD_SIZE = 15 // Increased board size for more food
         private const val SNAKE_MOVE_INTERVAL = 200L // Controls snake speed
-        private const val GAME_LOOP_DELAY = 4L      // For responsive input
+        private const val GAME_LOOP_DELAY = 2L      // For responsive input
         val backgroundImages = listOf(
             R.drawable.mas,
             R.drawable.ethan,
