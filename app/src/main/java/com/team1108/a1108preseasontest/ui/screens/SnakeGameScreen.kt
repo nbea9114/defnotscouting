@@ -99,7 +99,7 @@ class SnakeGameViewModel : ViewModel() {
     private var lastMoveTime = 1L
 
     companion object {
-        const val BOARD_SIZE = 15 // Increased board size for more food
+        const val BOARD_SIZE = 16 // Increased board size for more food
         private const val SNAKE_MOVE_INTERVAL = 200L // Controls snake speed
         private const val GAME_LOOP_DELAY = 2L      // For responsive input
         val backgroundImages = listOf(
@@ -201,7 +201,7 @@ class SnakeGameViewModel : ViewModel() {
     fun resetGame() {
         _gameState.value = SnakeGameState(
             snake = listOf(Coordinate(5, 5)),
-            foods = generateFoods(1, listOf(Coordinate(5, 5)), emptyList()),
+            foods = generateFoods(1, listOf(Coordinate(5, 5)), emptyList(), 0),
             direction = SnakeDirection.RIGHT,
             score = 0,
             isGameOver = false,
@@ -259,7 +259,7 @@ class SnakeGameViewModel : ViewModel() {
                         val remainingFoods = currentState.foods.toMutableList()
                         remainingFoods.remove(eatenFood)
 
-                        val newFoods = generateFoods(foodCount - remainingFoods.size, newSnake, remainingFoods)
+                        val newFoods = generateFoods(foodCount - remainingFoods.size, newSnake, remainingFoods, newScore)
 
                         currentState.copy(
                             snake = newSnake,
@@ -279,14 +279,17 @@ class SnakeGameViewModel : ViewModel() {
         }
     }
 
-    private fun generateFoods(count: Int, snake: List<Coordinate>, existingFoods: List<Coordinate>): List<Coordinate> {
+    private fun generateFoods(count: Int, snake: List<Coordinate>, existingFoods: List<Coordinate>, score: Int): List<Coordinate> {
         val foods = mutableListOf<Coordinate>()
+        val minCoord = if (score >= 75) 0 else 1
+        val maxCoordOffset = if (score >= 75) 0 else 1
+        
         repeat(count) {
             var foodPosition: Coordinate
             do {
                 foodPosition = Coordinate(
-                    x = (1 until BOARD_SIZE - 1).random(),
-                    y = (1 until BOARD_SIZE - 1).random()
+                    x = (minCoord until BOARD_SIZE - maxCoordOffset).random(),
+                    y = (minCoord until BOARD_SIZE - maxCoordOffset).random()
                 )
             } while (foodPosition in snake || foodPosition in existingFoods || foodPosition in foods)
             foods.add(foodPosition)
