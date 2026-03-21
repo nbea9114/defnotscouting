@@ -58,8 +58,6 @@ data class ScoutingState(
     val hopperCount: String = "",
     val humanPlayerStation: Boolean = false,
     val groundIntake: Boolean = false,
-    val isKitbot: Boolean = false,
-    val tugability: Float = 3f,
     val canTrench: Boolean = false,
     val canBump: Boolean = false,
     val generalKindness: Float = 3f,
