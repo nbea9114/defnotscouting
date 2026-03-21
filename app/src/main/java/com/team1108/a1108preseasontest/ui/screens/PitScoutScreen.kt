@@ -217,9 +217,9 @@ fun PitScoutScreen(
         Text("Ford v Ferrari", fontWeight = FontWeight.SemiBold)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             listOf("Ford", "Ferrari").forEach { carFav ->
-                val isSelected = uiState.pitDriveTrain == carFav
+                val isSelected = uiState.pitCarFav == carFav
                 OutlinedButton(
-                    onClick = { scoutingViewModel.updatePitDriveTrain(carFav) },
+                    onClick = { scoutingViewModel.updatePitCarFav(carFav) },
                     border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder
                 ) {
                     Text(carFav)

@@ -52,6 +52,7 @@ data class ScoutingState(
 
     // Pit Scout
     val pitDriveTrain: String = "",
+    val pitCarFav: String = "",
     val pitAutoClimb: Boolean = false,
     val pitClimbLevel: Int = 0,
     val hopperCount: String = "",
@@ -184,6 +185,10 @@ class ScoutingViewModel : ViewModel() {
         _uiState.update { it.copy(pitDriveTrain = driveTrain) }
     }
 
+    fun updatePitCarFav(driveTrain: String) {
+        _uiState.update { it.copy(pitDriveTrain = driveTrain) }
+    }
+
     fun updatePitAutoClimb(value: Boolean) {
         _uiState.update { it.copy(pitAutoClimb = value) }
     }
@@ -202,14 +207,6 @@ class ScoutingViewModel : ViewModel() {
 
     fun updateGroundIntake(value: Boolean) {
         _uiState.update { it.copy(groundIntake = value) }
-    }
-
-    fun updateIsKitbot(value: Boolean) {
-        _uiState.update { it.copy(isKitbot = value) }
-    }
-
-    fun updateTugability(value: Float) {
-        _uiState.update { it.copy(tugability = value) }
     }
 
     fun updateCanTrench(value: Boolean) {
@@ -437,7 +434,7 @@ class ScoutingViewModel : ViewModel() {
             state.canBump,
             state.pitClimbLevel,
             state.generalKindness.toInt(),
-            state.favoriteColor,
+            state.pitCarFav,
             state.pitOtherNotes.replace(",", ";").replace("\n", " ")
         ).joinToString(",")
     }
