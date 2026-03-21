@@ -430,14 +430,12 @@ class ScoutingViewModel : ViewModel() {
             state.teamNumber,
             state.pitDriveTrain,
             state.pitAutoClimb,
-            state.pitClimbLevel,
             state.hopperCount,
             state.humanPlayerStation,
             state.groundIntake,
-            state.isKitbot,
-            state.tugability.toInt(),
             state.canTrench,
             state.canBump,
+            state.pitClimbLevel,
             state.generalKindness.toInt(),
             state.favoriteColor,
             state.pitOtherNotes.replace(",", ";").replace("\n", " ")
@@ -498,7 +496,7 @@ class ScoutingViewModel : ViewModel() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val csvData = generatePitScoutCsv(uiState.value)
-                val header = "Timestamp,Scouter Name,Team #,Drive Train,Auto Climb,Climb Level,Hopper Count,Human Player Station,Ground Intake,Kitbot,Tugability,Can Trench,Can cross bump,General Kindness,Favorite Color,Other Notes"
+                val header = "Timestamp,Scouter Name,Team #,Drive Train,Auto Climb,Climb Level,Hopper Count,Human Player Station,Ground Intake,Can Trench,Can cross bump,General Kindness,Favorite Car,Other Notes"
                 saveCsvData(context, "pit_scout.csv", csvData, header)
             }
             resetScoutingState()

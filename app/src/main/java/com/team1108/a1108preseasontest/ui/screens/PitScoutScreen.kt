@@ -214,12 +214,18 @@ fun PitScoutScreen(
             steps = 3
         )
 
-        OutlinedTextField(
-            value = uiState.favoriteColor,
-            onValueChange = { scoutingViewModel.updateFavoriteColor(it) },
-            label = { Text("Favorite Color") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        Text("Ford v Ferrari", fontWeight = FontWeight.SemiBold)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            listOf("Ford", "Ferrari").forEach { carFav ->
+                val isSelected = uiState.pitDriveTrain == carFav
+                OutlinedButton(
+                    onClick = { scoutingViewModel.updatePitDriveTrain(carFav) },
+                    border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder
+                ) {
+                    Text(carFav)
+                }
+            }
+        }
 
         OutlinedTextField(
             value = uiState.pitOtherNotes,
