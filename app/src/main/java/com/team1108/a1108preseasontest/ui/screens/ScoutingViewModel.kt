@@ -42,6 +42,7 @@ data class ScoutingState(
     val robotAutoClimb: Boolean = false,
     val humanPlayerGreat: Boolean = false,
     val hanging: Int = 0,
+    val matchComments: String = "",
     val showRockGif: Boolean = false,
 
     // Super Scout
@@ -120,6 +121,9 @@ class ScoutingViewModel : ViewModel() {
             if (newScore >= 1000 && currentState.autoScore < 1000) {
                 showAndHideRockGif()
             }
+            if (newScore >= 10000 && currentState.autoScore < 10000) {
+                showAndHideRockGif()
+            }
             currentState.copy(autoScore = newScore)
         }
     }
@@ -128,6 +132,9 @@ class ScoutingViewModel : ViewModel() {
         _uiState.update { currentState ->
             val newScore = (currentState.teleopScore + delta).coerceAtLeast(0)
             if (newScore >= 1000 && currentState.teleopScore < 1000) {
+                showAndHideRockGif()
+            }
+            if (newScore >= 10000 && currentState.teleopScore < 10000) {
                 showAndHideRockGif()
             }
             currentState.copy(teleopScore = newScore)
@@ -178,13 +185,17 @@ class ScoutingViewModel : ViewModel() {
         _uiState.update { it.copy(hanging = value) }
     }
 
+    fun updateMatchComments(comments: String) {
+        _uiState.update { it.copy(matchComments = comments) }
+    }
+
     // --- Pit Scout Update Functions ---
     fun updatePitDriveTrain(driveTrain: String) {
         _uiState.update { it.copy(pitDriveTrain = driveTrain) }
     }
 
-    fun updatePitCarFav(driveTrain: String) {
-        _uiState.update { it.copy(pitDriveTrain = driveTrain) }
+    fun updatePitCarFav(carFav: String) {
+        _uiState.update { it.copy(pitCarFav = carFav) }
     }
 
     fun updatePitAutoClimb(value: Boolean) {
@@ -371,7 +382,8 @@ class ScoutingViewModel : ViewModel() {
             state.humanPlayerGreat,
             state.hanging == 1,
             state.hanging == 2,
-            state.hanging == 3
+            state.hanging == 3,
+            state.matchComments.replace(",", ";").replace("\n", " ")
         ).joinToString(",")
     }
 
@@ -425,12 +437,12 @@ class ScoutingViewModel : ViewModel() {
             state.teamNumber,
             state.pitDriveTrain,
             state.pitAutoClimb,
-            state.hopperCount,
-            state.humanPlayerStation,
-            state.groundIntake,
-            state.canTrench,
-            state.canBump,
-            state.pitClimbLevel,
+            state.pitClimbLevel,    // 5: Climb Level
+            state.hopperCount,       // 6: Hopper Count
+            state.humanPlayerStation,// 7: Human Player Station
+            state.groundIntake,      // 8: Ground Intake
+            state.canTrench,         // 9: Can Trench
+            state.canBump,           // 10: Can cross bump
             state.generalKindness.toInt(),
             state.pitCarFav,
             state.pitOtherNotes.replace(",", ";").replace("\n", " ")
@@ -438,13 +450,14 @@ class ScoutingViewModel : ViewModel() {
     }
 
     fun createMatchScoutQrCode(context: Context) {
+        val currentState = uiState.value
         if (isMatchScoutPrematchInfoMissing()) {
             _uiState.update { it.copy(showPrematchInfoMissingDialog = true) }
             return
         }
         viewModelScope.launch(Dispatchers.IO) {
-            val csvData = generateMatchScoutCsv(uiState.value)
-            val header = "Timestamp,Scouter Name,Match Number,Team #,Alliance Color,Alliance Prediction,Auto Score,Auto Accuracy,Robot Auto Climb,Robot No Move,Teleop Score,Teleop Accuracy,Robot Defense,Robot Broke,Robot Stuck,Human Player Great,Hanging 1,Hanging 2,Hanging 3"
+            val csvData = generateMatchScoutCsv(currentState)
+            val header = "Timestamp,Scouter Name,Match Number,Team #,Alliance Color,Alliance Prediction,Auto Score,Auto Accuracy,Robot Auto Climb,Robot No Move,Teleop Score,Teleop Accuracy,Robot Defense,Robot Broke,Robot Stuck,Human Player Great,Hanging 1,Hanging 2,Hanging 3,Comments"
             val bitmap = generateQrBitmap(csvData)
             if (bitmap != null) {
                 _uiState.update {
@@ -461,12 +474,13 @@ class ScoutingViewModel : ViewModel() {
     }
 
     fun createSuperScoutQrCode(context: Context) {
+        val currentState = uiState.value
         if (isSuperScoutPrematchInfoMissing()) {
             _uiState.update { it.copy(showPrematchInfoMissingDialog = true) }
             return
         }
         viewModelScope.launch(Dispatchers.IO) {
-            val csvData = generateSuperScoutCsv(uiState.value)
+            val csvData = generateSuperScoutCsv(currentState)
             val header = "Timestamp,Scouter Name,Alliance Color,Match Number,Team 1,Note 1,Rank 1,Scouter Name,Match Number,Team 2,Note 2,Rank 2,Scouter Name,Match Number,Team 3,Note 3,Rank 3,Scouter Name,Hub Active"
             val bitmap = generateQrBitmap(csvData)
             if (bitmap != null) {
@@ -484,13 +498,14 @@ class ScoutingViewModel : ViewModel() {
     }
 
     fun createPitScoutQrCode(context: Context) {
-        if (uiState.value.teamNumber == 0 || uiState.value.scoutName.isBlank()) {
+        val currentState = uiState.value
+        if (currentState.teamNumber == 0 || currentState.scoutName.isBlank()) {
             _uiState.update { it.copy(showPrematchInfoMissingDialog = true) }
             return
         }
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val csvData = generatePitScoutCsv(uiState.value)
+                val csvData = generatePitScoutCsv(currentState)
                 val header = "Timestamp,Scouter Name,Team #,Drive Train,Auto Climb,Climb Level,Hopper Count,Human Player Station,Ground Intake,Can Trench,Can cross bump,General Kindness,Favorite Car,Other Notes"
                 saveCsvData(context, "pit_scout.csv", csvData, header)
             }
@@ -519,8 +534,7 @@ class ScoutingViewModel : ViewModel() {
         _uiState.value = ScoutingState(
             scoutName = currentState.scoutName,
             matchNumber = currentState.matchNumber,
-            allianceColor = currentState.allianceColor,
-            teamNumber =  currentState.teamNumber
+            allianceColor = currentState.allianceColor
         )
     }
 }

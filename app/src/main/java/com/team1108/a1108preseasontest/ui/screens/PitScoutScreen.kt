@@ -1,5 +1,9 @@
 package com.team1108.a1108preseasontest.ui.screens
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -33,14 +38,30 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+private fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 @Composable
 fun PitScoutScreen(
     scoutingViewModel: ScoutingViewModel = viewModel(),
     onScoutSubmit: () -> Unit
 ) {
     val uiState by scoutingViewModel.uiState.collectAsState()
-    val scrollState = rememberScrollState()
     val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val activity = context.findActivity()
+        val originalOrientation = activity?.requestedOrientation
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+        onDispose {
+            if (originalOrientation != null) {
+                activity.requestedOrientation = originalOrientation
+            }
+        }
+    }
+    val scrollState = rememberScrollState()
+
 
     Column(
         modifier = Modifier

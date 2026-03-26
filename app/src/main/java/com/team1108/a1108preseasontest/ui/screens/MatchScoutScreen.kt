@@ -1,5 +1,9 @@
 package com.team1108.a1108preseasontest.ui.screens
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -14,17 +18,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,7 +49,11 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import com.team1108.a1108preseasontest.R
-
+private fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 @Composable
 fun MatchScoutScreen(
     scoutingViewModel: ScoutingViewModel,
@@ -49,7 +61,16 @@ fun MatchScoutScreen(
 ) {
     val uiState by scoutingViewModel.uiState.collectAsState()
     val context = LocalContext.current
-
+    DisposableEffect(Unit) {
+        val activity = context.findActivity()
+        val originalOrientation = activity?.requestedOrientation
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+        onDispose {
+            if (originalOrientation != null) {
+                activity.requestedOrientation = originalOrientation
+            }
+        }
+    }
     if (uiState.generatedQrBitmap != null) {
         QrCodeDialog(
             qrBitmap = uiState.generatedQrBitmap!!,
@@ -78,6 +99,7 @@ fun MatchScoutScreen(
             humanPlayerGreat = uiState.humanPlayerGreat,
             robotAutoClimb = uiState.robotAutoClimb,
             hanging = uiState.hanging,
+            matchComments = uiState.matchComments,
             onAutoFuelChange = { scoutingViewModel.updateAutoScore(it) },
             onTeleFuelChange = { scoutingViewModel.updateTeleopScore(it) },
             onAutoAccuracyChange = { scoutingViewModel.updateAutoAccuracy(it) },
@@ -89,6 +111,7 @@ fun MatchScoutScreen(
             onHumanPlayerGreatChange = { scoutingViewModel.updateHumanPlayerGreat(it) },
             onRobotAutoClimbChange = { scoutingViewModel.updateRobotAutoClimb(it) },
             onHangingChange = { scoutingViewModel.updateHanging(it) },
+            onMatchCommentsChange = { scoutingViewModel.updateMatchComments(it) },
             onSubmitClick = {
                 scoutingViewModel.createMatchScoutQrCode(context)
             }
@@ -110,6 +133,7 @@ fun MatchScoutScreen(
                 modifier = Modifier.fillMaxSize()
             )
         }
+
     }
 }
 
@@ -128,6 +152,7 @@ fun MatchScoutScreenContent(
     humanPlayerGreat: Boolean,
     robotAutoClimb: Boolean,
     hanging: Int,
+    matchComments: String,
     onAutoFuelChange: (Int) -> Unit,
     onTeleFuelChange: (Int) -> Unit,
     onAutoAccuracyChange: (Int) -> Unit,
@@ -139,6 +164,7 @@ fun MatchScoutScreenContent(
     onHumanPlayerGreatChange: (Boolean) -> Unit,
     onRobotAutoClimbChange: (Boolean) -> Unit,
     onHangingChange: (Int) -> Unit,
+    onMatchCommentsChange: (String) -> Unit,
     onSubmitClick: () -> Unit
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -278,6 +304,19 @@ fun MatchScoutScreenContent(
                     onCheckedChange = onHumanPlayerGreatChange
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Any other notes/comments", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = matchComments,
+                onValueChange = onMatchCommentsChange,
+                label = { Text("Comments or concerns") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                maxLines = 5
+            )
 
             Spacer(modifier = Modifier.height(40.dp))
 

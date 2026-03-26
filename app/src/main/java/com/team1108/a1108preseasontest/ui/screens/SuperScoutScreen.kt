@@ -1,5 +1,9 @@
 package com.team1108.a1108preseasontest.ui.screens
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +28,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,6 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team1108.a1108preseasontest.R
 
+private fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 @Composable
 fun SuperScoutScreen(
     scoutingViewModel: ScoutingViewModel,
@@ -46,6 +56,16 @@ fun SuperScoutScreen(
 ) {
     val uiState by scoutingViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val activity = context.findActivity()
+        val originalOrientation = activity?.requestedOrientation
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+        onDispose {
+            if (originalOrientation != null) {
+                activity.requestedOrientation = originalOrientation
+            }
+        }
+    }
 
     if (uiState.showPrematchInfoMissingDialog) {
         PrematchInfoMissingDialog(onDismiss = scoutingViewModel::dismissPrematchInfoMissingDialog)
