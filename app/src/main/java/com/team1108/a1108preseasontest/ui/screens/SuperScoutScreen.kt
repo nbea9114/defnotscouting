@@ -88,6 +88,7 @@ fun SuperScoutScreen(
         matchNumber = uiState.matchNumber,
         superScoutNotes = uiState.superScoutNotes,
         superScoutRanks = uiState.superScoutRanks,
+        superScoutTeamDidNotShow = uiState.superScoutTeamDidNotShow,
         hubActive = uiState.hubActive,
         onNoteChange = scoutingViewModel::updateSuperScoutNote,
         onRankChange = scoutingViewModel::updateSuperScoutRank,
@@ -101,6 +102,7 @@ fun SuperScoutScreenContent(
     matchNumber: Int,
     superScoutNotes: List<Pair<String, String>>,
     superScoutRanks: Map<Int, Int>,
+    superScoutTeamDidNotShow: List<Boolean>,
     hubActive: Boolean,
     onNoteChange: (Int, String) -> Unit,
     onRankChange: (Int, Int) -> Unit,
@@ -128,26 +130,41 @@ fun SuperScoutScreenContent(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 superScoutNotes.forEachIndexed { index, pair ->
+                    val isNoShow = superScoutTeamDidNotShow.getOrElse(index) { false }
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Team: ${pair.first}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "Team: ${pair.first}${if (isNoShow) " (No Show)" else ""}",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isNoShow) Color.Gray else Color.Unspecified
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = pair.second,
                             onValueChange = { onNoteChange(index, it) },
-                            label = { Text(if (pair.first.isNotBlank()) "Add notes..." else "Team number needed to add notes") },
+                            label = { 
+                                Text(
+                                    when {
+                                        isNoShow -> "Team marked as No Show"
+                                        pair.first.isNotBlank() -> "Add notes..."
+                                        else -> "Team number needed to add notes"
+                                    }
+                                ) 
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(240.dp),
-                            enabled = pair.first.isNotBlank()
+                            enabled = pair.first.isNotBlank() && !isNoShow
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Rank",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isNoShow) Color.Gray else Color.Unspecified
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -158,6 +175,7 @@ fun SuperScoutScreenContent(
                                 OutlinedButton(
                                     onClick = { onRankChange(index, rank) },
                                     border = if (isSelected) BorderStroke(4.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder,
+                                    enabled = !isNoShow
                                 ) {
                                     Text("$rank")
                                 }

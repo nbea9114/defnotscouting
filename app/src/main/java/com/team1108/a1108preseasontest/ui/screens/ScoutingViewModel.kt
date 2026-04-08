@@ -28,6 +28,7 @@ data class ScoutingState(
     val allianceColor: String? = null,
     val alliancePrediction: String? = null,
     val isScouting: Boolean = false,
+    val isPracticeOrPlayoff: Boolean = false,
     val showPrematchInfoMissingDialog: Boolean = false,
 
     // Match Scout
@@ -37,9 +38,11 @@ data class ScoutingState(
     val teleopAccuracy: Int = -1,
     val robotBroke: Boolean = false,
     val robotStuck: Boolean = false,
-    val robotDefense: Boolean = false,
+    val robotDefense: Int = 0,
+    val driverSkill: Int = 5,
     val robotNoMove: Boolean = false,
     val robotAutoClimb: Boolean = false,
+    val robotShuttle: Boolean = false,
     val humanPlayerGreat: Boolean = false,
     val hanging: Int = 0,
     val matchComments: String = "",
@@ -53,6 +56,8 @@ data class ScoutingState(
 
     // Pit Scout
     val pitDriveTrain: String = "",
+    val pitShooterType: String = "",
+    val pitTurretType: String = "",
     val pitCarFav: String = "",
     val pitAutoClimb: Boolean = false,
     val pitClimbLevel: Int = 0,
@@ -104,6 +109,10 @@ class ScoutingViewModel : ViewModel() {
         if (!uiState.value.isScouting) {
             _uiState.update { it.copy(alliancePrediction = prediction) }
         }
+    }
+
+    fun updatePracticeOrPlayoff(value: Boolean) {
+        _uiState.update { it.copy(isPracticeOrPlayoff = value) }
     }
 
     fun dismissPrematchInfoMissingDialog() {
@@ -165,8 +174,12 @@ class ScoutingViewModel : ViewModel() {
         _uiState.update { it.copy(robotStuck = value) }
     }
 
-    fun updateRobotDefense(value: Boolean) {
+    fun updateRobotDefense(value: Int) {
         _uiState.update { it.copy(robotDefense = value) }
+    }
+
+    fun updateDriverSkill(value: Int) {
+        _uiState.update { it.copy(driverSkill = value) }
     }
 
     fun updateRobotNoMove(value: Boolean) {
@@ -175,6 +188,10 @@ class ScoutingViewModel : ViewModel() {
 
     fun updateRobotAutoClimb(value: Boolean) {
         _uiState.update { it.copy(robotAutoClimb = value) }
+    }
+
+    fun updateRobotShuttle(value: Boolean) {
+        _uiState.update { it.copy(robotShuttle = value) }
     }
 
     fun updateHumanPlayerGreat(value: Boolean) {
@@ -192,6 +209,14 @@ class ScoutingViewModel : ViewModel() {
     // --- Pit Scout Update Functions ---
     fun updatePitDriveTrain(driveTrain: String) {
         _uiState.update { it.copy(pitDriveTrain = driveTrain) }
+    }
+
+    fun updatePitShooterType(shooterType: String) {
+        _uiState.update { it.copy(pitShooterType = shooterType) }
+    }
+
+    fun updatePitTurretType(turretType: String) {
+        _uiState.update { it.copy(pitTurretType = turretType) }
     }
 
     fun updatePitCarFav(carFav: String) {
@@ -290,17 +315,7 @@ class ScoutingViewModel : ViewModel() {
             val updatedDidNotShow = currentState.superScoutTeamDidNotShow.toMutableList()
             if (index in 0..updatedDidNotShow.lastIndex) {
                 updatedDidNotShow[index] = didNotShow
-                // Also clear the team number if the box is checked
-                if (didNotShow) {
-                    val updatedNotes = currentState.superScoutNotes.toMutableList()
-                    updatedNotes[index] = updatedNotes[index].copy(first = "")
-                    currentState.copy(
-                        superScoutTeamDidNotShow = updatedDidNotShow,
-                        superScoutNotes = updatedNotes
-                    )
-                } else {
-                    currentState.copy(superScoutTeamDidNotShow = updatedDidNotShow)
-                }
+                currentState.copy(superScoutTeamDidNotShow = updatedDidNotShow)
             } else {
                 currentState
             }
@@ -377,6 +392,8 @@ class ScoutingViewModel : ViewModel() {
             state.teleopScore,
             state.teleopAccuracy,
             state.robotDefense,
+            state.driverSkill,
+            state.robotShuttle,
             state.robotBroke,
             state.robotStuck,
             state.humanPlayerGreat,
@@ -389,7 +406,7 @@ class ScoutingViewModel : ViewModel() {
 
     private fun generateSuperScoutCsv(state: ScoutingState): String {
         val (team1, note1, rank1) = if (state.superScoutTeamDidNotShow[0]) {
-            Triple("", "", "")
+            Triple("No Show", "", "")
         } else {
             Triple(
                 state.superScoutNotes.getOrNull(0)?.first ?: "",
@@ -399,7 +416,7 @@ class ScoutingViewModel : ViewModel() {
         }
 
         val (team2, note2, rank2) = if (state.superScoutTeamDidNotShow[1]) {
-            Triple("", "", "")
+            Triple("No Show", "", "")
         } else {
             Triple(
                 state.superScoutNotes.getOrNull(1)?.first ?: "",
@@ -409,7 +426,7 @@ class ScoutingViewModel : ViewModel() {
         }
 
         val (team3, note3, rank3) = if (state.superScoutTeamDidNotShow[2]) {
-            Triple("", "", "")
+            Triple("No Show", "", "")
         } else {
             Triple(
                 state.superScoutNotes.getOrNull(2)?.first ?: "",
@@ -436,6 +453,8 @@ class ScoutingViewModel : ViewModel() {
             state.scoutName,
             state.teamNumber,
             state.pitDriveTrain,
+            state.pitShooterType,
+            state.pitTurretType,
             state.pitAutoClimb,
             state.pitClimbLevel,    // 5: Climb Level
             state.hopperCount,       // 6: Hopper Count
@@ -457,14 +476,15 @@ class ScoutingViewModel : ViewModel() {
         }
         viewModelScope.launch(Dispatchers.IO) {
             val csvData = generateMatchScoutCsv(currentState)
-            val header = "Timestamp,Scouter Name,Match Number,Team #,Alliance Color,Alliance Prediction,Auto Score,Auto Accuracy,Robot Auto Climb,Robot No Move,Teleop Score,Teleop Accuracy,Robot Defense,Robot Broke,Robot Stuck,Human Player Great,Hanging 1,Hanging 2,Hanging 3,Comments"
+            val header = "Timestamp,Scouter Name,Match Number,Team #,Alliance Color,Alliance Prediction,Auto Score,Auto Accuracy,Robot Auto Climb,Robot No Move,Teleop Score,Teleop Accuracy,Robot Defense,Driver Skill,Robot Shuttle,Robot Broke,Robot Stuck,Human Player Great,Hanging 1,Hanging 2,Hanging 3,Comments"
+            val fileName = if (currentState.isPracticeOrPlayoff) "match_scout_practice_playoffs.csv" else "match_scout.csv"
             val bitmap = generateQrBitmap(csvData)
             if (bitmap != null) {
                 _uiState.update {
                     it.copy(
                         generatedQrBitmap = bitmap,
                         csvDataToSave = csvData,
-                        csvFileName = "match_scout.csv",
+                        csvFileName = fileName,
                         csvHeader = header,
                         qrCodeTitle = "Match Scout"
                     )
@@ -482,13 +502,14 @@ class ScoutingViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val csvData = generateSuperScoutCsv(currentState)
             val header = "Timestamp,Scouter Name,Alliance Color,Match Number,Team 1,Note 1,Rank 1,Scouter Name,Match Number,Team 2,Note 2,Rank 2,Scouter Name,Match Number,Team 3,Note 3,Rank 3,Scouter Name,Hub Active"
+            val fileName = if (currentState.isPracticeOrPlayoff) "super_scout_practice_playoffs.csv" else "super_scout.csv"
             val bitmap = generateQrBitmap(csvData)
             if (bitmap != null) {
                 _uiState.update {
                     it.copy(
                         generatedQrBitmap = bitmap,
                         csvDataToSave = csvData,
-                        csvFileName = "super_scout.csv",
+                        csvFileName = fileName,
                         csvHeader = header,
                         qrCodeTitle = "Super Scout"
                     )
@@ -506,7 +527,7 @@ class ScoutingViewModel : ViewModel() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val csvData = generatePitScoutCsv(currentState)
-                val header = "Timestamp,Scouter Name,Team #,Drive Train,Auto Climb,Climb Level,Hopper Count,Human Player Station,Ground Intake,Can Trench,Can cross bump,General Kindness,Favorite Car,Other Notes"
+                val header = "Timestamp,Scouter Name,Team #,Drive Train,Shooter Type,Turret Type,Auto Climb,Climb Level,Hopper Count,Human Player Station,Ground Intake,Can Trench,Can cross bump,General Kindness,Favorite Car,Other Notes"
                 saveCsvData(context, "pit_scout.csv", csvData, header)
             }
             resetScoutingState()
@@ -525,7 +546,8 @@ class ScoutingViewModel : ViewModel() {
         val currentState = uiState.value
         _uiState.value = ScoutingState(
             scoutName = currentState.scoutName,
-            matchNumber = currentState.matchNumber + 1
+            matchNumber = currentState.matchNumber + 1,
+            isPracticeOrPlayoff = currentState.isPracticeOrPlayoff
         )
     }
 
@@ -534,7 +556,8 @@ class ScoutingViewModel : ViewModel() {
         _uiState.value = ScoutingState(
             scoutName = currentState.scoutName,
             matchNumber = currentState.matchNumber,
-            allianceColor = currentState.allianceColor
+            allianceColor = currentState.allianceColor,
+            isPracticeOrPlayoff = currentState.isPracticeOrPlayoff
         )
     }
 }

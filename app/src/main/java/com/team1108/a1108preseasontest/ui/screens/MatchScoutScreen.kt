@@ -95,9 +95,11 @@ fun MatchScoutScreen(
             robotBroke = uiState.robotBroke,
             robotStuck = uiState.robotStuck,
             robotDefense = uiState.robotDefense,
+            driverSkill = uiState.driverSkill,
             robotNoMove = uiState.robotNoMove,
             humanPlayerGreat = uiState.humanPlayerGreat,
             robotAutoClimb = uiState.robotAutoClimb,
+            robotShuttle = uiState.robotShuttle,
             hanging = uiState.hanging,
             matchComments = uiState.matchComments,
             onAutoFuelChange = { scoutingViewModel.updateAutoScore(it) },
@@ -107,9 +109,11 @@ fun MatchScoutScreen(
             onRobotBrokeChange = { scoutingViewModel.updateRobotBroke(it) },
             onRobotStuckChange = { scoutingViewModel.updateRobotStuck(it) },
             onRobotDefenseChange = { scoutingViewModel.updateRobotDefense(it) },
+            onDriverSkillChange = { scoutingViewModel.updateDriverSkill(it) },
             onRobotNoMoveChange = { scoutingViewModel.updateRobotNoMove(it) },
             onHumanPlayerGreatChange = { scoutingViewModel.updateHumanPlayerGreat(it) },
             onRobotAutoClimbChange = { scoutingViewModel.updateRobotAutoClimb(it) },
+            onRobotShuttleChange = { scoutingViewModel.updateRobotShuttle(it) },
             onHangingChange = { scoutingViewModel.updateHanging(it) },
             onMatchCommentsChange = { scoutingViewModel.updateMatchComments(it) },
             onSubmitClick = {
@@ -147,10 +151,12 @@ fun MatchScoutScreenContent(
     teleAccuracy: Int,
     robotBroke: Boolean,
     robotStuck: Boolean,
-    robotDefense: Boolean,
+    robotDefense: Int,
+    driverSkill: Int,
     robotNoMove: Boolean,
     humanPlayerGreat: Boolean,
     robotAutoClimb: Boolean,
+    robotShuttle: Boolean,
     hanging: Int,
     matchComments: String,
     onAutoFuelChange: (Int) -> Unit,
@@ -159,10 +165,12 @@ fun MatchScoutScreenContent(
     onTeleAccuracyChange: (Int) -> Unit,
     onRobotBrokeChange: (Boolean) -> Unit,
     onRobotStuckChange: (Boolean) -> Unit,
-    onRobotDefenseChange: (Boolean) -> Unit,
+    onRobotDefenseChange: (Int) -> Unit,
+    onDriverSkillChange: (Int) -> Unit,
     onRobotNoMoveChange: (Boolean) -> Unit,
     onHumanPlayerGreatChange: (Boolean) -> Unit,
     onRobotAutoClimbChange: (Boolean) -> Unit,
+    onRobotShuttleChange: (Boolean) -> Unit,
     onHangingChange: (Int) -> Unit,
     onMatchCommentsChange: (String) -> Unit,
     onSubmitClick: () -> Unit
@@ -261,6 +269,33 @@ fun MatchScoutScreenContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            RatingSelection(
+                label = "Robot PLAYED Defence",
+                selectedValue = robotDefense,
+                onValueSelected = onRobotDefenseChange
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            RatingSelection(
+                label = "Driver Skill",
+                selectedValue = driverSkill,
+                onValueSelected = onDriverSkillChange
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Robot SHUTTLED?", modifier = Modifier.weight(1f), fontSize = 18.sp)
+                Switch(
+                    checked = robotShuttle,
+                    onCheckedChange = onRobotShuttleChange
+                )
+            }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -280,17 +315,6 @@ fun MatchScoutScreenContent(
                 Switch(
                     checked = robotStuck,
                     onCheckedChange = onRobotStuckChange
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Robot PLAYED Defence", modifier = Modifier.weight(1f), fontSize = 18.sp)
-                Switch(
-                    checked = robotDefense,
-                    onCheckedChange = onRobotDefenseChange
                 )
             }
 
@@ -327,6 +351,33 @@ fun MatchScoutScreenContent(
             ) {
                 Text("SUBMIT", color = Color.White)
             }
+        }
+    }
+}
+
+@Composable
+fun RatingSelection(label: String, selectedValue: Int, onValueSelected: (Int) -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 8.dp)) {
+        Text(label, fontWeight = FontWeight.SemiBold)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Slider(
+                value = selectedValue.toFloat(),
+                onValueChange = { onValueSelected(it.toInt()) },
+                valueRange = 0f..10.0f,
+                steps = 9,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "$selectedValue/10",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(60.dp)
+            )
         }
     }
 }
@@ -405,15 +456,15 @@ fun ValueScoringSection(label: String, count: Int, onValueChange: (Int) -> Unit)
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                ScoreButton(value = -50, onClick = onValueChange)
                 ScoreButton(value = -25, onClick = onValueChange)
                 ScoreButton(value = -5, onClick = onValueChange)
+                ScoreButton(value = -1, onClick = onValueChange)
 
                 Text("$count", fontSize = 36.sp, modifier = Modifier.padding(horizontal = 16.dp))
 
+                ScoreButton(value = 1, onClick = onValueChange)
                 ScoreButton(value = 5, onClick = onValueChange)
                 ScoreButton(value = 25, onClick = onValueChange)
-                ScoreButton(value = 50, onClick = onValueChange)
             }
         }
     }

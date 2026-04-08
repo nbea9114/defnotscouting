@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,7 +21,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -81,140 +85,170 @@ fun SuperScoutPrematchScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Super Scout Prematch", fontSize = 48.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text("Your Robot's Alliance", fontSize = 36.sp, fontWeight = FontWeight.Bold)
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // RED ALLIANCE BUTTON
-            Button(
-                onClick = { scoutingViewModel.selectAlliance("Red") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
-                border = if (uiState.allianceColor == "Red") BorderStroke(4.dp, Color.Black) else null,
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Match Type Switch in top-left
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 100.dp, max = 150.dp)
-                    .padding(8.dp)
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
             ) {
-                Text("Red Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Quals",
+                    fontSize = 18.sp,
+                    color = if (!uiState.isPracticeOrPlayoff) Color.Unspecified else Color.Gray,
+                    fontWeight = if (!uiState.isPracticeOrPlayoff) FontWeight.Bold else FontWeight.Normal
+                )
+                Switch(
+                    checked = uiState.isPracticeOrPlayoff,
+                    onCheckedChange = { scoutingViewModel.updatePracticeOrPlayoff(it) },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                Text(
+                    text = "Practice or Playoffs",
+                    fontSize = 18.sp,
+                    color = if (uiState.isPracticeOrPlayoff) Color.Unspecified else Color.Gray,
+                    fontWeight = if (uiState.isPracticeOrPlayoff) FontWeight.Bold else FontWeight.Normal
+                )
             }
 
-            // BLUE ALLIANCE BUTTON
-            Button(
-                onClick = { scoutingViewModel.selectAlliance("Blue") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                border = if (uiState.allianceColor == "Blue") BorderStroke(4.dp, Color.Black) else null,
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 100.dp, max = 150.dp)
-                    .padding(8.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("Blue Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            }
-        }
+                Text("Super Scout Prematch", fontSize = 48.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = uiState.scoutName,
-                onValueChange = { scoutingViewModel.updateScoutName(it) },
-                label = { Text("Scout Name") },
-                modifier = Modifier.weight(1f)
-            )
+                Text("Your Robot's Alliance", fontSize = 36.sp, fontWeight = FontWeight.Bold)
 
-            OutlinedTextField(
-                value = if (uiState.matchNumber == 0) "" else uiState.matchNumber.toString(),
-                onValueChange = { scoutingViewModel.updateMatchNumber(it) },
-                label = { Text("Match Number") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // RED ALLIANCE BUTTON
+                    Button(
+                        onClick = { scoutingViewModel.selectAlliance("Red") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
+                        border = if (uiState.allianceColor == "Red") BorderStroke(4.dp, Color.Black) else null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 100.dp, max = 150.dp)
+                            .padding(8.dp)
+                    ) {
+                        Text("Red Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                    }
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)){
-            uiState.superScoutNotes.forEachIndexed { index, pair ->
-                Column(modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(
-                        value = pair.first,
-                        onValueChange = { scoutingViewModel.updateSuperScoutTeam(index, it) },
-                        label = { Text("Team ${index + 1}") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.superScoutTeamDidNotShow[index]
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = uiState.superScoutTeamDidNotShow[index],
-                            onCheckedChange = { scoutingViewModel.updateSuperScoutTeamDidNotShow(index, it) }
-                        )
-                        Text("Your team did not show")
+                    // BLUE ALLIANCE BUTTON
+                    Button(
+                        onClick = { scoutingViewModel.selectAlliance("Blue") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        border = if (uiState.allianceColor == "Blue") BorderStroke(4.dp, Color.Black) else null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 100.dp, max = 150.dp)
+                            .padding(8.dp)
+                    ) {
+                        Text("Blue Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
                     }
                 }
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = uiState.scoutName,
+                        onValueChange = { scoutingViewModel.updateScoutName(it) },
+                        label = { Text("Scout Name") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = if (uiState.matchNumber == 0) "" else uiState.matchNumber.toString(),
+                        onValueChange = { scoutingViewModel.updateMatchNumber(it) },
+                        label = { Text("Match Number") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)){
+                    uiState.superScoutNotes.forEachIndexed { index, pair ->
+                        Column(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = pair.first,
+                                onValueChange = { scoutingViewModel.updateSuperScoutTeam(index, it) },
+                                label = { Text("Team ${index + 1}") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = true
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = uiState.superScoutTeamDidNotShow[index],
+                                    onCheckedChange = { scoutingViewModel.updateSuperScoutTeamDidNotShow(index, it) }
+                                )
+                                Text("Your team did not show")
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Your Match Prediction", fontSize = 36.sp, fontWeight = FontWeight.Bold)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // RED PREDICTION BUTTON
+                    Button(
+                        onClick = { scoutingViewModel.updatePrediction("Red") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
+                        border = if (uiState.alliancePrediction == "Red") BorderStroke(4.dp, Color.Black) else null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 100.dp, max = 150.dp)
+                            .padding(8.dp),
+                        enabled = !uiState.isScouting
+                    ) {
+                        Text(if (uiState.isScouting) "nice" else "Red Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    // BLUE PREDICTION BUTTON
+                    Button(
+                        onClick = { scoutingViewModel.updatePrediction("Blue") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        border = if (uiState.alliancePrediction == "Blue") BorderStroke(4.dp, Color.Black) else null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 100.dp, max = 150.dp)
+                            .padding(8.dp),
+                        enabled = !uiState.isScouting
+                    ) {
+                        Text(if (uiState.isScouting) "try" else "Blue Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { 
+                        scoutingViewModel.startScouting()
+                        onStartClick()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Start Scouting")
+                }
             }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Your Match Prediction", fontSize = 36.sp, fontWeight = FontWeight.Bold)
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // RED PREDICTION BUTTON
-            Button(
-                onClick = { scoutingViewModel.updatePrediction("Red") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
-                border = if (uiState.alliancePrediction == "Red") BorderStroke(4.dp, Color.Black) else null,
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 100.dp, max = 150.dp)
-                    .padding(8.dp),
-                enabled = !uiState.isScouting
-            ) {
-                Text(if (uiState.isScouting) "nice" else "Red Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            }
-
-            // BLUE PREDICTION BUTTON
-            Button(
-                onClick = { scoutingViewModel.updatePrediction("Blue") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                border = if (uiState.alliancePrediction == "Blue") BorderStroke(4.dp, Color.Black) else null,
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 100.dp, max = 150.dp)
-                    .padding(8.dp),
-                enabled = !uiState.isScouting
-            ) {
-                Text(if (uiState.isScouting) "try" else "Blue Alliance", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { 
-                scoutingViewModel.startScouting()
-                onStartClick()
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Start Scouting")
         }
     }
 }
