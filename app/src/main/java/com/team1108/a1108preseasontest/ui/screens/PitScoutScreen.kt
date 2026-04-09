@@ -105,13 +105,53 @@ fun PitScoutScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Shooter Type", fontWeight = FontWeight.SemiBold)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            listOf("No Shooter", "Drum", "Single", "Double").forEach { shooterType ->
+                val isSelected = uiState.pitShooterType == shooterType
+                OutlinedButton(
+                    onClick = { scoutingViewModel.updatePitShooterType(shooterType) },
+                    border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder
+                ) {
+                    Text(shooterType)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            // TURRET TOGGLE
+            val hasTurret = uiState.pitHasTurret
+            OutlinedButton(
+                onClick = { scoutingViewModel.updatePitHasTurret(!uiState.pitHasTurret) },
+                border = if (hasTurret) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder,
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+            ) {
+                Text("Turret?")
+            }
+
+            // SHUTTLE TOGGLE
+            val canShuttle = uiState.pitCanShuttle
+            OutlinedButton(
+                onClick = { scoutingViewModel.updatePitCanShuttle(!uiState.pitCanShuttle) },
+                border = if (canShuttle) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder,
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+            ) {
+                Text("Shuttle?")
+            }
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
 
         // AUTO CLIMB TOGGLE
         val isAutoClimbSelected = uiState.pitAutoClimb
         OutlinedButton(
             onClick = { scoutingViewModel.updatePitAutoClimb(!uiState.pitAutoClimb) },
-            border = if (isAutoClimbSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder
+            border = if (isAutoClimbSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Auto Climb?")
         }

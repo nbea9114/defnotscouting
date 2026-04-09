@@ -57,7 +57,8 @@ data class ScoutingState(
     // Pit Scout
     val pitDriveTrain: String = "",
     val pitShooterType: String = "",
-    val pitTurretType: String = "",
+    val pitHasTurret: Boolean = false,
+    val pitCanShuttle: Boolean = false,
     val pitCarFav: String = "",
     val pitAutoClimb: Boolean = false,
     val pitClimbLevel: Int = 0,
@@ -215,8 +216,12 @@ class ScoutingViewModel : ViewModel() {
         _uiState.update { it.copy(pitShooterType = shooterType) }
     }
 
-    fun updatePitTurretType(turretType: String) {
-        _uiState.update { it.copy(pitTurretType = turretType) }
+    fun updatePitHasTurret(value: Boolean) {
+        _uiState.update { it.copy(pitHasTurret = value) }
+    }
+
+    fun updatePitCanShuttle(value: Boolean) {
+        _uiState.update { it.copy(pitCanShuttle = value) }
     }
 
     fun updatePitCarFav(carFav: String) {
@@ -454,7 +459,8 @@ class ScoutingViewModel : ViewModel() {
             state.teamNumber,
             state.pitDriveTrain,
             state.pitShooterType,
-            state.pitTurretType,
+            state.pitHasTurret,
+            state.pitCanShuttle,
             state.pitAutoClimb,
             state.pitClimbLevel,    // 5: Climb Level
             state.hopperCount,       // 6: Hopper Count
@@ -527,7 +533,7 @@ class ScoutingViewModel : ViewModel() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val csvData = generatePitScoutCsv(currentState)
-                val header = "Timestamp,Scouter Name,Team #,Drive Train,Shooter Type,Turret Type,Auto Climb,Climb Level,Hopper Count,Human Player Station,Ground Intake,Can Trench,Can cross bump,General Kindness,Favorite Car,Other Notes"
+                val header = "Timestamp,Scouter Name,Team #,Drive Train,Shooter Type,Has Turret,Can Shuttle,Auto Climb,Climb Level,Hopper Count,Human Player Station,Ground Intake,Can Trench,Can cross bump,General Kindness,Favorite Car,Other Notes"
                 saveCsvData(context, "pit_scout.csv", csvData, header)
             }
             resetScoutingState()
