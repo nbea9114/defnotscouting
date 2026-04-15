@@ -109,8 +109,8 @@ fun PitScoutScreen(
 
         Text("Shooter Type", fontWeight = FontWeight.SemiBold)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            listOf("No Shooter", "Drum", "Single", "Double").forEach { shooterType ->
-                val isSelected = uiState.pitShooterType == shooterType
+            listOf("No Shooter", "" + "2Drum", "Single", "Double").forEach { shooterType ->
+                val isSelected =uiState.pitShooterType == shooterType
                 OutlinedButton(
                     onClick = { scoutingViewModel.updatePitShooterType(shooterType) },
                     border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else ButtonDefaults.outlinedButtonBorder
